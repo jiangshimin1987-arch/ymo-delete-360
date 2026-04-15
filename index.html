@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>多位数删除问题 · 互动课件</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #080e1e;
+  --surface:  #0d1830;
+  --surface2: #122040;
+  --border:   #1c3260;
+  --text:     #ccdff8;
+  --dim:      #4a6898;
+  --gold:     #ffc832;
+  --gold-bg:  #2a1e02;
+  --red:      #ff4d5a;
+  --red-bg:   #3a0810;
+  --green:    #2edb72;
+  --green-bg: #062816;
+  --blue:     #5ab0ff;
+  --purple:   #c070ff;
+  --orange:   #ff9540;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Serif SC', serif;
+  min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 18px 14px 50px;
+}
+.container { max-width: 700px; width: 100%; }
+
+/* ── Header ── */
+.header { text-align: center; margin-bottom: 20px; }
+.badge-row { display: flex; justify-content: center; gap: 8px; margin-bottom: 10px; }
+.badge {
+  font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em;
+  padding: 3px 10px; border-radius: 4px;
+}
+.badge-ymo { background: #1a2860; color: var(--blue); border: 1px solid #2a4aa0; }
+.badge-g5  { background: var(--gold-bg); color: var(--gold); border: 1px solid #604000; }
+.main-title {
+  font-size: 1.45rem; font-weight: 900; color: var(--gold);
+  letter-spacing: 0.08em; margin-bottom: 4px;
+  text-shadow: 0 0 24px rgba(255,200,50,0.3);
+}
+.sub-title { font-size: 0.8rem; color: var(--dim); }
+
+/* ── Progress ── */
+.progress-wrap { display: flex; gap: 5px; justify-content: center; align-items: center; margin-bottom: 20px; }
+.p-dot {
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--border); transition: all 0.35s;
+}
+.p-dot.done  { background: #1a6030; }
+.p-dot.active { background: var(--gold); box-shadow: 0 0 8px var(--gold); transform: scale(1.3); }
+.p-counter { font-size: 0.72rem; color: var(--dim); margin-left: 8px; font-family: 'Space Mono', monospace; }
+
+/* ── Step card ── */
+.step-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-bottom: 14px;
+  position: relative;
+  overflow: hidden;
+}
+.step-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--gold), transparent);
+}
+.step-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.step-icon {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: var(--gold-bg); border: 1px solid var(--gold);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.95rem; font-weight: 900; color: var(--gold);
+  flex-shrink: 0; font-family: 'Space Mono', monospace;
+}
+.step-title-text { font-size: 1rem; font-weight: 700; color: var(--gold); }
+.explanation { font-size: 0.88rem; line-height: 1.85; color: var(--text); }
+.explanation p { margin-bottom: 8px; }
+.explanation p:last-child { margin-bottom: 0; }
+.hl   { color: var(--gold); font-weight: 700; }
+.del  { color: var(--red); font-weight: 700; }
+.keep { color: var(--green); font-weight: 700; }
+.em   { color: var(--blue); font-style: italic; }
+.fx {
+  background: var(--surface2); border-left: 3px solid var(--gold);
+  padding: 8px 12px; border-radius: 0 6px 6px 0;
+  margin: 8px 0; font-family: 'Space Mono', monospace;
+  font-size: 0.83rem; color: var(--text); line-height: 1.7;
+}
+
+/* ── Digit Grid ── */
+.grid-wrap {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px; padding: 12px 10px;
+  margin-bottom: 12px; transition: opacity 0.3s;
+}
+.grid-lbl {
+  font-size: 0.72rem; color: var(--dim); margin-bottom: 8px;
+  text-align: center; letter-spacing: 0.04em;
+  min-height: 16px; transition: color 0.4s;
+}
+.digit-grid {
+  display: grid;
+  grid-template-columns: repeat(24, 1fr);
+  gap: 2px;
+}
+/* individual cell */
+.cell {
+  aspect-ratio: 1;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Space Mono', monospace;
+  font-size: 10px; font-weight: 700;
+  border-radius: 3px;
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--text); user-select: none;
+  transition: background 0.35s, border-color 0.35s, color 0.35s,
+              opacity 0.35s, transform 0.35s;
+  will-change: background, opacity;
+}
+.cell.c-1to9   { background: #0f2050; border-color: #2040a0; color: #80b0ff; }
+.cell.c-10to99 { background: #062820; border-color: #1a6040; color: #50c080; }
+.cell.c-100    { background: #281828; border-color: #803080; color: #d080ff; }
+.cell.alive    { background: var(--surface); border-color: var(--border); color: var(--text); }
+.cell.ghost    { opacity: 0.08; background: transparent; border-color: transparent; color: var(--dim); }
+.cell.mk-del   { background: var(--red-bg); border-color: var(--red); color: var(--red); animation: pulse 0.45s ease; }
+.cell.mk-keep  { background: var(--green-bg); border-color: var(--green); color: var(--green); }
+.cell.survivor {
+  background: var(--gold-bg); border-color: var(--gold); color: var(--gold);
+  transform: scale(1.12);
+  box-shadow: 0 0 8px rgba(255,200,50,0.4);
+}
+.cell.hidden-cell { opacity: 0; transform: scale(0.4); }
+@keyframes pulse {
+  0%,100% { transform: scale(1); }
+  50% { transform: scale(1.18); }
+}
+
+/* ── Zoom strip (for final rounds) ── */
+.zoom-strip {
+  display: flex; justify-content: center; gap: 10px;
+  padding: 10px 0; min-height: 0;
+  transition: all 0.4s;
+}
+.zoom-cell {
+  width: 48px; height: 58px;
+  background: var(--surface2); border: 1.5px solid var(--border);
+  border-radius: 8px; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 3px;
+  font-family: 'Space Mono', monospace; transition: all 0.35s;
+}
+.zoom-cell .zv { font-size: 1.6rem; font-weight: 700; color: var(--text); }
+.zoom-cell .zp { font-size: 0.6rem; color: var(--dim); }
+.zoom-cell.zk-del { border-color: var(--red); background: var(--red-bg); }
+.zoom-cell.zk-del .zv { color: var(--red); }
+.zoom-cell.zk-keep { border-color: var(--green); background: var(--green-bg); }
+.zoom-cell.zk-keep .zv { color: var(--green); }
+.zoom-cell.zk-surv {
+  border-color: var(--gold); background: var(--gold-bg);
+  box-shadow: 0 0 12px rgba(255,200,50,0.35);
+  transform: scale(1.1);
+}
+.zoom-cell.zk-surv .zv { color: var(--gold); }
+
+/* ── Count display ── */
+.count-bar {
+  text-align: center; font-family: 'Space Mono', monospace;
+  font-size: 1rem; font-weight: 700; color: var(--text);
+  margin-bottom: 12px; min-height: 28px;
+  transition: opacity 0.4s;
+}
+.count-bar .arrow { color: var(--dim); margin: 0 8px; }
+
+/* ── Answer box ── */
+.answer-box {
+  background: linear-gradient(135deg, #12182e, #08101c);
+  border: 2px solid var(--gold); border-radius: 16px;
+  padding: 24px 20px; text-align: center; margin-bottom: 12px;
+}
+.ans-pos-row {
+  display: flex; justify-content: center; gap: 12px; margin-bottom: 20px;
+}
+.ans-card {
+  flex: 1; max-width: 100px;
+  background: var(--surface2); border: 1.5px solid var(--gold);
+  border-radius: 10px; padding: 10px 6px;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.ans-digit {
+  font-size: 2.2rem; font-weight: 900;
+  font-family: 'Space Mono', monospace; color: var(--gold);
+}
+.ans-label { font-size: 0.65rem; color: var(--dim); line-height: 1.4; text-align: center; }
+.ans-number {
+  font-size: 3.2rem; font-weight: 900;
+  font-family: 'Space Mono', monospace; color: var(--gold);
+  letter-spacing: 0.15em; margin-bottom: 6px;
+}
+@keyframes glow-pulse {
+  0%,100% { text-shadow: 0 0 14px var(--gold), 0 0 28px rgba(255,200,50,0.4); }
+  50% { text-shadow: 0 0 28px var(--gold), 0 0 56px rgba(255,160,0,0.6); }
+}
+.ans-number.glow { animation: glow-pulse 1.8s ease infinite; }
+.ans-caption { font-size: 0.85rem; color: var(--dim); }
+
+/* ── Buttons ── */
+.btn-row {
+  display: flex; gap: 10px; justify-content: center; margin-top: 4px;
+}
+.btn {
+  padding: 10px 26px; border-radius: 8px; border: none;
+  font-family: 'Noto Serif SC', serif; font-size: 0.88rem;
+  font-weight: 700; cursor: pointer; transition: all 0.2s;
+  letter-spacing: 0.06em;
+}
+.btn-main  { background: var(--gold); color: #0a0a00; }
+.btn-main:hover:not(:disabled) { background: #ffd440; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(255,200,50,0.3); }
+.btn-main:disabled { background: #3a2e06; color: #5a4a10; cursor: not-allowed; }
+.btn-back  { background: transparent; color: var(--dim); border: 1px solid var(--border); }
+.btn-back:hover:not(:disabled) { color: var(--text); border-color: var(--dim); }
+.btn-back:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* ── Problem display ── */
+.problem-box {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 16px; margin: 10px 0;
+  font-size: 0.9rem; line-height: 1.9;
+}
+
+/* ── Mini legend ── */
+.legend { display: flex; gap: 14px; flex-wrap: wrap; margin: 8px 0; }
+.legend-item { display: flex; align-items: center; gap: 5px; font-size: 0.75rem; }
+.legend-dot {
+  width: 12px; height: 12px; border-radius: 2px;
+  border: 1px solid; flex-shrink: 0;
+}
+.ld-del  { background: var(--red-bg); border-color: var(--red); }
+.ld-keep { background: var(--green-bg); border-color: var(--green); }
+.ld-surv { background: var(--gold-bg); border-color: var(--gold); }
+.ld-gone { background: transparent; border-color: var(--border); opacity: 0.4; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="badge-row">
+      <span class="badge badge-ymo">YMO 竞赛</span>
+      <span class="badge badge-g5">五年级</span>
+    </div>
+    <div class="main-title">多位数删除问题</div>
+    <div class="sub-title">互动推导课件 · 一步一步学</div>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress-wrap" id="progressWrap">
+    <span class="p-counter" id="pCounter">0 / 9</span>
+  </div>
+
+  <!-- Step card -->
+  <div class="step-card">
+    <div class="step-head">
+      <div class="step-icon" id="stepIcon">★</div>
+      <div class="step-title-text" id="stepTitleText">载入中…</div>
+    </div>
+    <div class="explanation" id="expl"></div>
+  </div>
+
+  <!-- Grid -->
+  <div class="grid-wrap" id="gridWrap">
+    <div class="grid-lbl" id="gridLbl"></div>
+    <div class="digit-grid" id="grid"></div>
+    <div class="zoom-strip" id="zoom" style="display:none"></div>
+  </div>
+
+  <!-- Count bar -->
+  <div class="count-bar" id="countBar"></div>
+
+  <!-- Answer box -->
+  <div id="answerBox" style="display:none"></div>
+
+  <!-- Buttons -->
+  <div class="btn-row">
+    <button class="btn btn-back" id="prevBtn" onclick="prevStep()" disabled>← 上一步</button>
+    <button class="btn btn-main" id="nextBtn" onclick="nextStep()">下一步 →</button>
+  </div>
+
+</div>
+<script>
+// ════════════════════════════════════════════
+// 1. DATA
+// ════════════════════════════════════════════
+const DIGITS = [];
+for (let n = 1; n <= 100; n++) for (const c of String(n)) DIGITS.push(c);
+// DIGITS.length === 192
+
+// Simulate all 6 rounds
+// roundIdx[r] = array of ORIGINAL 0-based indices surviving AFTER round r
+// roundIdx[0] = initial (all 192)
+const roundIdx = [DIGITS.map((_, i) => i)];
+let cur = [...roundIdx[0]];
+for (let r = 0; r < 6; r++) {
+  cur = cur.filter((_, i) => i % 2 === 1); // keep even 1-indexed = odd 0-indexed
+  roundIdx.push([...cur]);
+}
+// roundIdx[6] = [63, 127, 191]  → '3','6','0' → 360
+
+// ════════════════════════════════════════════
+// 2. DOM SETUP
+// ════════════════════════════════════════════
+const $grid    = document.getElementById('grid');
+const $gridWrap= document.getElementById('gridWrap');
+const $gridLbl = document.getElementById('gridLbl');
+const $zoom    = document.getElementById('zoom');
+const $countBar= document.getElementById('countBar');
+const $ansBox  = document.getElementById('answerBox');
+const $expl    = document.getElementById('expl');
+const $icon    = document.getElementById('stepIcon');
+const $title   = document.getElementById('stepTitleText');
+const $nextBtn = document.getElementById('nextBtn');
+const $prevBtn = document.getElementById('prevBtn');
+const $pWrap   = document.getElementById('progressWrap');
+const $pCount  = document.getElementById('pCounter');
+
+// Build 192 cells
+const cells = [];
+for (let i = 0; i < 192; i++) {
+  const d = document.createElement('div');
+  d.className = 'cell hidden-cell';
+  d.textContent = DIGITS[i];
+  $grid.appendChild(d);
+  cells.push(d);
+}
+
+// Build progress dots (10 steps, 0-indexed)
+const TOTAL_STEPS = 10;
+const dots = [];
+for (let i = 0; i < TOTAL_STEPS; i++) {
+  const d = document.createElement('div');
+  d.className = 'p-dot';
+  // insert before the counter span
+  $pWrap.insertBefore(d, $pCount);
+  dots.push(d);
+}
+
+// ════════════════════════════════════════════
+// 3. UTILS
+// ════════════════════════════════════════════
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+function setCells(idxSet, cls) {
+  for (const i of idxSet) { cells[i].className = 'cell ' + cls; }
+}
+
+function updateProgress(step) {
+  dots.forEach((d, i) => {
+    d.className = 'p-dot' + (i < step ? ' done' : i === step ? ' active' : '');
+  });
+  $pCount.textContent = `${step + 1} / ${TOTAL_STEPS}`;
+}
+
+function setCountBar(html) { $countBar.innerHTML = html || ''; }
+
+async function animateRound(roundNum) {
+  const prevAlive = roundIdx[roundNum - 1];
+  const nextAliveSet = new Set(roundIdx[roundNum]);
+  const prevAliveSet = new Set(prevAlive);
+
+  // 1. Set all cells to their pre-round state
+  for (let i = 0; i < 192; i++) {
+    cells[i].style.transform = '';
+    cells[i].className = 'cell ' + (prevAliveSet.has(i) ? 'alive' : 'ghost');
+  }
+  await sleep(300);
+
+  // 2. Color-code: mark delete (odd 1-indexed) vs keep (even 1-indexed)
+  const BATCH = 24;
+  for (let pos = 0; pos < prevAlive.length; pos++) {
+    const origIdx = prevAlive[pos];
+    cells[origIdx].className = 'cell ' + (pos % 2 === 0 ? 'mk-del' : 'mk-keep');
+    if ((pos + 1) % BATCH === 0) await sleep(roundNum === 1 ? 35 : 20);
+  }
+
+  await sleep(900);
+
+  // Show zoom strip for small rounds
+  if (prevAlive.length <= 12) {
+    $zoom.style.display = 'flex';
+    $zoom.innerHTML = '';
+    prevAlive.forEach((origIdx, pos) => {
+      const z = document.createElement('div');
+      z.className = 'zoom-cell ' + (pos % 2 === 0 ? 'zk-del' : 'zk-keep');
+      z.innerHTML = `<div class="zv">${DIGITS[origIdx]}</div>
+                     <div class="zp">位 ${pos + 1}</div>`;
+      $zoom.appendChild(z);
+    });
+    await sleep(600);
+  }
+
+  // 3. Delete odd-positioned cells
+  for (let pos = 0; pos < prevAlive.length; pos++) {
+    if (pos % 2 === 0) {
+      const origIdx = prevAlive[pos];
+      cells[origIdx].className = 'cell ghost';
+    }
+    if ((pos + 1) % BATCH === 0) await sleep(20);
+  }
+
+  // Update zoom strip
+  if (prevAlive.length <= 12) {
+    await sleep(400);
+    $zoom.innerHTML = '';
+    roundIdx[roundNum].forEach(origIdx => {
+      const z = document.createElement('div');
+      z.className = 'zoom-cell zk-surv';
+      z.innerHTML = `<div class="zv">${DIGITS[origIdx]}</div>
+                     <div class="zp">第 ${origIdx + 1} 位</div>`;
+      $zoom.appendChild(z);
+    });
+  }
+
+  await sleep(500);
+
+  // 4. Return keep cells to alive (or survivor if final round)
+  const finalClass = (roundNum === 6) ? 'survivor' : 'alive';
+  for (const origIdx of nextAliveSet) cells[origIdx].className = 'cell ' + finalClass;
+
+  $gridLbl.textContent = `第 ${roundNum} 轮后：剩余 ${nextAliveSet.size} 位`;
+  setCountBar(`<span style="color:var(--dim)">第 ${roundNum} 轮</span>
+    <span class="arrow">→</span>
+    <span style="color:var(--gold)">${prevAlive.length}</span>
+    <span class="arrow">÷ 2 =</span>
+    <span style="color:var(--gold)">${nextAliveSet.size}</span>
+    <span style="color:var(--dim)"> 位剩余</span>`);
+}
+
+// ════════════════════════════════════════════
+// 4. STEPS
+// ════════════════════════════════════════════
+let currentStep = 0;
+let animating = false;
+
+const steps = [
+
+  // ── Step 0: Problem intro ──────────────────
+  async () => {
+    $icon.textContent = '题';
+    $title.textContent = '题目介绍';
+    $gridWrap.style.display = 'none';
+    $zoom.style.display = 'none';
+    $ansBox.style.display = 'none';
+    setCountBar('');
+    $expl.innerHTML = `
+      <p>把前 <span class="hl">100</span> 个自然数依序写下，拼成一个多位数：</p>
+      <div class="problem-box">
+        <span style="color:var(--blue)">1 2 3 4 5 6 7 8 9</span>
+        <span style="color:var(--green)"> 1 0 1 1 1 2 1 3 … 9 9</span>
+        <span style="color:var(--purple)"> 1 0 0</span>
+      </div>
+      <p>从第 1 位开始对每个数位编号：</p>
+      <div class="fx">位置：1, 2, 3, 4, 5, 6, 7, 8, …</div>
+      <p>规则：每次删去 <span class="del">奇数编号</span> 上的数字，重新编号，重复操作，
+         直到只剩下一个 <span class="hl">三位数</span>。</p>
+      <p>❓ 这个三位数是多少？</p>`;
+  },
+
+  // ── Step 1: Build string, count 192 ───────
+  async () => {
+    $icon.textContent = '①';
+    $title.textContent = '计算总位数';
+    $gridWrap.style.display = '';
+    $zoom.style.display = 'none';
+    $ansBox.style.display = 'none';
+    $gridLbl.textContent = '正在建立数字串…';
+    setCountBar('');
+
+    $expl.innerHTML = `
+      <p>先算出这个多位数一共有几位：</p>
+      <div class="fx">• <span style="color:var(--blue)">1–9</span>：9 个数 × 1 位 = <span class="hl">9 位</span><br>
+           • <span style="color:var(--green)">10–99</span>：90 个数 × 2 位 = <span class="hl">180 位</span><br>
+           • <span style="color:var(--purple)">100</span>：1 个数 × 3 位 = <span class="hl">3 位</span></div>
+      <p>合计：9 + 180 + 3 = <span class="hl" style="font-size:1.1em">192 位</span></p>
+      <p style="color:var(--dim);font-size:0.82rem">↓ 下面用方格展示全部 192 个数字</p>`;
+
+    // Reset all cells
+    for (let i = 0; i < 192; i++) {
+      cells[i].style.transform = '';
+      cells[i].className = 'cell hidden-cell';
+    }
+    await sleep(200);
+
+    // Animate group 1 (1-9): blue
+    for (let i = 0; i < 9; i++) {
+      cells[i].className = 'cell c-1to9';
+      await sleep(45);
+    }
+    await sleep(150);
+
+    // Animate group 2 (10-99): green, batched
+    for (let i = 9; i < 189; i++) {
+      cells[i].className = 'cell c-10to99';
+      if (i % 12 === 0) await sleep(18);
+    }
+    await sleep(200);
+
+    // Animate group 3 (100): purple
+    for (let i = 189; i < 192; i++) {
+      cells[i].className = 'cell c-100';
+      await sleep(120);
+    }
+
+    $gridLbl.textContent = '全部 192 个数字（蓝 = 1–9，绿 = 10–99，紫 = 100）';
+    setCountBar(`<span style="color:var(--blue)">9</span>
+      <span class="arrow">+</span>
+      <span style="color:var(--green)">180</span>
+      <span class="arrow">+</span>
+      <span style="color:var(--purple)">3</span>
+      <span class="arrow">=</span>
+      <span style="color:var(--gold)">192 位</span>`);
+    await sleep(400);
+  },
+
+  // ── Steps 2–7: Six rounds ─────────────────
+  async () => {
+    $icon.textContent = 'R1'; $title.textContent = '第 1 轮删除';
+    $gridWrap.style.display = ''; $ansBox.style.display = 'none';
+    $zoom.style.display = 'none';
+    $expl.innerHTML = `
+      <p>现在有 <span class="hl">192</span> 位，从第 1 位开始重新编号，删去奇数位：</p>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot ld-del"></div><span class="del">奇数位（1,3,5…）→ 删去</span></div>
+        <div class="legend-item"><div class="legend-dot ld-keep"></div><span class="keep">偶数位（2,4,6…）→ 保留</span></div>
+      </div>
+      <p>删除后剩下：<span class="hl">192 ÷ 2 = 96</span> 位</p>`;
+    await animateRound(1);
+  },
+
+  async () => {
+    $icon.textContent = 'R2'; $title.textContent = '第 2 轮删除';
+    $gridWrap.style.display = ''; $ansBox.style.display = 'none';
+    $zoom.style.display = 'none';
+    $expl.innerHTML = `
+      <p>剩下 <span class="hl">96</span> 位，再次重新编号，删去奇数位：</p>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot ld-del"></div><span class="del">奇数位 → 删去</span></div>
+        <div class="legend-item"><div class="legend-dot ld-keep"></div><span class="keep">偶数位 → 保留</span></div>
+        <div class="legend-item"><div class="legend-dot ld-gone"></div><span style="color:var(--dim)">上轮已删</span></div>
+      </div>
+      <p>删除后剩下：<span class="hl">96 ÷ 2 = 48</span> 位</p>`;
+    await animateRound(2);
+  },
+
+  async () => {
+    $icon.textContent = 'R3'; $title.textContent = '第 3 轮删除';
+    $gridWrap.style.display = ''; $ansBox.style.display = 'none';
+    $zoom.style.display = 'none';
+    $expl.innerHTML = `
+      <p>剩下 <span class="hl">48</span> 位，再次删去奇数位：</p>
+      <p>48 ÷ 2 = <span class="hl">24</span> 位</p>
+      <p style="color:var(--dim);font-size:0.82rem">规律：每轮数量减半</p>`;
+    await animateRound(3);
+  },
+
+  async () => {
+    $icon.textContent = 'R4'; $title.textContent = '第 4 轮删除';
+    $gridWrap.style.display = ''; $ansBox.style.display = 'none';
+    $zoom.style.display = 'none';
+    $expl.innerHTML = `
+      <p>剩下 <span class="hl">24</span> 位，再次删去奇数位：</p>
+      <p>24 ÷ 2 = <span class="hl">12</span> 位</p>`;
+    await animateRound(4);
+  },
+
+  async () => {
+    $icon.textContent = 'R5'; $title.textContent = '第 5 轮删除';
+    $gridWrap.style.display = ''; $ansBox.style.display = 'none';
+    $expl.innerHTML = `
+      <p>剩下 <span class="hl">12</span> 位，再次删去奇数位：</p>
+      <p>12 ÷ 2 = <span class="hl">6</span> 位</p>
+      <p style="color:var(--dim);font-size:0.82rem">↓ 现在位数少了，下方放大显示</p>`;
+    await animateRound(5);
+  },
+
+  async () => {
+    $icon.textContent = 'R6'; $title.textContent = '第 6 轮删除（最后一轮）';
+    $gridWrap.style.display = ''; $ansBox.style.display = 'none';
+    $expl.innerHTML = `
+      <p>剩下 <span class="hl">6</span> 位，再次删去奇数位（第 1、3、5 位）：</p>
+      <p>6 ÷ 2 = <span class="hl">3</span> 位 ← 正好是三位数！</p>
+      <p>操作结束 ✓</p>`;
+    await animateRound(6);
+  },
+
+  // ── Step 8: Position analysis ─────────────
+  async () => {
+    $icon.textContent = '💡'; $title.textContent = '找出存活的数字';
+    $gridWrap.style.display = '';
+    $ansBox.style.display = 'none';
+    $zoom.style.display = 'none';
+
+    $expl.innerHTML = `
+      <p><span class="hl">数学规律</span>：每轮保留偶数位 = 把「存活门槛」加倍</p>
+      <div class="fx">第 1 轮后：<span class="hl">2</span> 的倍数位存活<br>
+           第 2 轮后：<span class="hl">4</span> 的倍数位存活<br>
+           第 3 轮后：<span class="hl">8</span> 的倍数位存活<br>
+           ⋮<br>
+           第 6 轮后：<span class="hl">2<sup>6</sup> = 64</span> 的倍数位存活</div>
+      <p>192 以内 64 的倍数：</p>
+      <div class="fx" style="color:var(--gold)">64、128、192　→ 正好 3 个 ✓</div>`;
+
+    // Show grid with only survivors highlighted
+    for (let i = 0; i < 192; i++) {
+      cells[i].style.transform = '';
+      cells[i].className = 'cell ' + ([63, 127, 191].includes(i) ? 'survivor' : 'ghost');
+    }
+    $gridLbl.textContent = '存活的 3 个位置：第 64 位、第 128 位、第 192 位';
+    setCountBar(`存活位置（1-indexed）：
+      <span style="color:var(--gold)">64</span>
+      <span class="arrow">、</span>
+      <span style="color:var(--gold)">128</span>
+      <span class="arrow">、</span>
+      <span style="color:var(--gold)">192</span>`);
+  },
+
+  // ── Step 9: Final answer ──────────────────
+  async () => {
+    $icon.textContent = '✓'; $title.textContent = '答案揭晓';
+    $gridWrap.style.display = 'none';
+    $zoom.style.display = 'none';
+    setCountBar('');
+
+    $expl.innerHTML = `
+      <p>逐一找出第 64、128、192 位对应的数字：</p>
+      <p style="margin-top:6px">
+        📍 <span class="hl">第 64 位</span>：
+        前 9 位是数字 1–9，之后每个两位数占 2 格。<br>
+        第 64 位 = 第 <span class="hl">55</span> 个两位数字位
+        = 数字 <span class="hl">37</span> 的第 1 位
+        = <span style="color:var(--gold);font-size:1.15em;font-weight:900">3</span>
+      </p>
+      <p style="margin-top:6px">
+        📍 <span class="hl">第 128 位</span>：
+        128 − 9 = 119，第 <span class="hl">119</span> 个两位数字位
+        = 数字 <span class="hl">69</span> 的第 1 位
+        = <span style="color:var(--gold);font-size:1.15em;font-weight:900">6</span>
+      </p>
+      <p style="margin-top:6px">
+        📍 <span class="hl">第 192 位</span>：
+        全串最后一位 = 数字 <span class="hl">100</span> 的最后一位
+        = <span style="color:var(--gold);font-size:1.15em;font-weight:900">0</span>
+      </p>`;
+
+    $ansBox.style.display = '';
+    $ansBox.innerHTML = `
+      <div class="answer-box">
+        <div class="ans-pos-row">
+          <div class="ans-card">
+            <div class="ans-digit">3</div>
+            <div class="ans-label">第 64 位<br>来自 <b>37</b></div>
+          </div>
+          <div class="ans-card">
+            <div class="ans-digit">6</div>
+            <div class="ans-label">第 128 位<br>来自 <b>69</b></div>
+          </div>
+          <div class="ans-card">
+            <div class="ans-digit">0</div>
+            <div class="ans-label">第 192 位<br>来自 <b>100</b></div>
+          </div>
+        </div>
+        <div class="ans-number glow">360</div>
+        <div class="ans-caption">这个三位数是 <strong style="color:var(--gold)">360</strong> 🎉</div>
+      </div>`;
+  },
+];
+
+// ════════════════════════════════════════════
+// 5. NAVIGATION
+// ════════════════════════════════════════════
+async function goTo(step) {
+  if (animating) return;
+  animating = true;
+  $nextBtn.disabled = true;
+  $prevBtn.disabled = true;
+  currentStep = step;
+  updateProgress(step);
+  await steps[step]();
+  animating = false;
+  $nextBtn.disabled = (currentStep >= TOTAL_STEPS - 1);
+  $prevBtn.disabled = (currentStep <= 0);
+}
+
+function nextStep() { if (currentStep < TOTAL_STEPS - 1) goTo(currentStep + 1); }
+function prevStep() { if (currentStep > 0) goTo(currentStep - 1); }
+
+// Init
+goTo(0);
+</script>
+</body>
+</html>
